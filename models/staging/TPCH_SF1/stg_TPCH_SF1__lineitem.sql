@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['lineitem_orderkey', 'lineitem_linenumber']
+    unique_key=['order_key', 'line_number']
 ) }}
 
 with source as (
@@ -12,22 +12,22 @@ with source as (
 renamed as (
 
     select
-        l_orderkey as lineitem_orderkey,
-        l_partkey as lineitem_partkey,
-        l_suppkey as lineitem_suppkey,
-        l_linenumber as lineitem_linenumber,
-        l_quantity as lineitem_quantity,
-        l_extendedprice as lineitem_extendedprice,
-        l_discount as lineitem_discount,
-        l_tax as lineitem_tax,
-        l_returnflag as lineitem_returnflag,
-        l_linestatus as lineitem_status,
-        l_shipdate as lineitem_shipdate,
-        l_commitdate as lineitem_commitdate,
-        l_receiptdate as lineitem_reciptdate,
-        l_shipinstruct as lineitem_shipinstruct,
-        l_shipmode as lineitem_shipmode,
-        l_comment as lineitem_comment
+        l_orderkey as order_key,
+        l_partkey as part_key,
+        l_suppkey as supplier_key,
+        l_linenumber as line_number,
+        l_quantity as item_quantity,
+        l_extendedprice as item_extended_price,
+        l_discount as item_discount,
+        l_tax as item_tax,
+        l_returnflag as item_return_flag,
+        l_linestatus as item_status,
+        l_shipdate as item_ship_date,
+        l_commitdate as item_commit_date,
+        l_receiptdate as item_receipt_date,
+        l_shipinstruct as item_ship_instruct,
+        l_shipmode as item_ship_mode,
+        l_comment as item_comment
 
     from source
 
@@ -36,5 +36,5 @@ renamed as (
 select * from renamed
 
 {% if is_incremental() %}
-  where lineitem_shipdate >= (select max(lineitem_shipdate) from {{ this }})
+  where item_ship_date >= (select coalesce(max(existing.item_ship_date), '1970-01-01'::date) from {{ this }} as existing)
 {% endif %}

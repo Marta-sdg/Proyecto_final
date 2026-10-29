@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key='orders_orderkey'
+    unique_key='order_key'
 ) }}
 
 with source as (
@@ -12,15 +12,15 @@ with source as (
 renamed as (
 
     select
-        o_orderkey as orders_orderkey,
-        o_custkey as orders_custkey,
-        o_orderstatus as orders_orderstatus,
-        o_totalprice as orders_totalprice,
-        o_orderdate as orders_orderdate,
-        o_orderpriority as orders_orderpriority,
-        o_clerk as orders_clerk,
-        o_shippriority as orders_shippriority,
-        o_comment as orders_comment
+        o_orderkey as order_key,
+        o_custkey as customer_key,
+        o_orderstatus as order_status,
+        o_totalprice as total_price,
+        o_orderdate as order_date,
+        o_orderpriority as order_priority,
+        o_clerk as order_clerk,
+        o_shippriority as order_ship_priority,
+        o_comment as order_comment
 
     from source
 
@@ -29,5 +29,5 @@ renamed as (
 select * from renamed
 
 {% if is_incremental() %}
-  where orders_orderdate >= (select max(orders_orderdate) from {{ this }})
+  where order_date >= (select coalesce(max(order_date), '1970-01-01'::date) from {{ this }})
 {% endif %}

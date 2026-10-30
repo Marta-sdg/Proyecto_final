@@ -1,6 +1,3 @@
-{{ config(
-    materialized='table'
-) }}
 
 with order_items as (
 
@@ -28,10 +25,8 @@ final as (
         item_ship_mode,
         item_ship_instruct,
 
-        case
-            when item_receipt_date > item_commit_date then true
-            else false
-        end as is_receipt_delayed,
+        -- Delivery latency check using macro
+        {{ is_delivery_delayed('item_receipt_date', 'item_commit_date') }} as is_receipt_delayed,
 
         -- Quantities & Financials
         item_quantity,

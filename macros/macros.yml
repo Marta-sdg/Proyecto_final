@@ -1,0 +1,22 @@
+version: 2
+
+macros:
+  - name: calculate_net_amount
+    description: "Calculates the net sales revenue for an item by applying the discount rate to its extended list price. Formula: (extended_price * (1 - discount_rate))."
+    arguments:
+      - name: extended_price
+        type: numeric
+        description: "The line item gross list price prior to discounts."
+      - name: discount_rate
+        type: numeric
+        description: "The percentage discount represented as a decimal between 0.00 and 1.00."
+
+  - name: is_delivery_delayed
+    description: "Evaluates fulfillment latency by comparing actual receipt date against the committed delivery date. Returns true if receipt_date > commit_date, otherwise false."
+    arguments:
+      - name: receipt_date
+        type: date
+        description: "The date the customer physically received the line item."
+      - name: commit_date
+        type: date
+        description: "The agreed contract or estimated delivery deadline date."

@@ -1,9 +1,9 @@
 version: 2
 
 models:
-#DIMENSIONS
+
   - name: dim_customers
-    description: "Customer dimension containing profile, geographic attributes, and lifetime spending aggregates."
+    description: "Customer dimension containing profile, geographic hierarchy, and lifetime order aggregates."
     columns:
       - name: customer_key
         description: "Primary key of dim_customers."
@@ -15,12 +15,12 @@ models:
         tests:
           - not_null
 
-      - name: has_placed_order
+      - name: region_name
         tests:
           - not_null
 
   - name: dim_suppliers
-    description: "Supplier dimension with geographic and contact details."
+    description: "Supplier dimension with geographic hierarchy and profile details."
     columns:
       - name: supplier_key
         description: "Primary key of dim_suppliers."
@@ -29,6 +29,10 @@ models:
           - not_null
 
       - name: nation_name
+        tests:
+          - not_null
+
+      - name: region_name
         tests:
           - not_null
 
@@ -45,9 +49,8 @@ models:
         tests:
           - not_null
 
-#FACTS
   - name: fct_orders
-    description: "Header-level order facts pre-aggregated from line items."
+    description: "Order-level fact table containing order status, dates, and order financial aggregates."
     columns:
       - name: order_key
         description: "Primary key of fct_orders."
@@ -75,14 +78,11 @@ models:
               arguments:
                 values: ['O', 'F', 'P']
 
-      - name: net_order_sales_amount
-        tests:
-          - not_null
-
   - name: fct_ordered_items
     description: "Atomic line-item fact table with item-level unit economics, margin, and fulfillment flags."
     columns:
       - name: order_key
+        description: "Foreign key pointing to header-level fct_orders."
         tests:
           - not_null
           - relationships:
@@ -95,6 +95,7 @@ models:
           - not_null
 
       - name: customer_key
+        description: "Foreign key pointing to dim_customers."
         tests:
           - not_null
           - relationships:
@@ -103,6 +104,7 @@ models:
                 field: customer_key
 
       - name: part_key
+        description: "Foreign key pointing to dim_parts."
         tests:
           - not_null
           - relationships:
@@ -111,6 +113,7 @@ models:
                 field: part_key
 
       - name: supplier_key
+        description: "Foreign key pointing to dim_suppliers."
         tests:
           - not_null
           - relationships:
@@ -118,11 +121,8 @@ models:
                 to: ref('dim_suppliers')
                 field: supplier_key
 
-      - name: item_ship_date
-        tests:
-          - not_null
-
-      - name: item_receipt_date
+      - name: is_receipt_delayed
+        description: "Boolean flag set to true when actual item receipt date exceeds commit date."
         tests:
           - not_null
 
@@ -130,10 +130,10 @@ models:
         tests:
           - not_null
 
-      - name: is_receipt_delayed
+      - name: item_gross_profit_amount
         tests:
           - not_null
-          
+
 # UNIT TESTS
 unit_tests:
   - name: test_fct_ordered_items_latency_and_profit
@@ -191,6 +191,7 @@ unit_tests:
             supply_cost: 30.00
             total_item_supply_cost: 30.00
             item_gross_profit_amount: 20.00
+
     expect:
       rows:
         - order_key: 101

@@ -1,3 +1,6 @@
+{{ config(
+    materialized='table'
+) }}
 
 with order_items as (
 
@@ -25,20 +28,24 @@ final as (
         item_ship_mode,
         item_ship_instruct,
 
-    -- Shipping Latency Check
         case
             when item_receipt_date > item_commit_date then true
             else false
         end as is_receipt_delayed,
 
-    -- Financial Metrics
+        -- Quantities & Financials
         item_quantity,
         item_extended_price,
         item_discount,
         item_tax,
         discount_amount,
         net_item_sales_amount,
-        gross_item_sales_amount_with_tax
+        gross_item_sales_amount_with_tax,
+
+        -- Cost & Profitability
+        supply_cost,
+        total_item_supply_cost,
+        item_gross_profit_amount
 
     from order_items
 

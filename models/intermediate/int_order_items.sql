@@ -40,16 +40,16 @@ order_items as (
         lineitem.item_ship_mode,
         lineitem.item_ship_instruct,
 
-        -- Pricing & Revenue
+        -- Pricing & Revenue using macro
         (lineitem.item_extended_price * lineitem.item_discount) as discount_amount,
-        (lineitem.item_extended_price * (1 - lineitem.item_discount)) as net_item_sales_amount,
-        ((lineitem.item_extended_price * (1 - lineitem.item_discount)) * (1 + lineitem.item_tax)) as gross_item_sales_amount_with_tax,
+        {{ calculate_net_amount('lineitem.item_extended_price', 'lineitem.item_discount') }} as net_item_sales_amount,
+        ({{ calculate_net_amount('lineitem.item_extended_price', 'lineitem.item_discount') }} * (1 + lineitem.item_tax)) as gross_item_sales_amount_with_tax,
 
         -- Cost & Margin Metrics (from int_part_availability)
         part_availability.supply_cost,
         (lineitem.item_quantity * part_availability.supply_cost) as total_item_supply_cost,
         (
-            (lineitem.item_extended_price * (1 - lineitem.item_discount)) 
+            {{ calculate_net_amount('lineitem.item_extended_price', 'lineitem.item_discount') }} 
             - (lineitem.item_quantity * part_availability.supply_cost)
         ) as item_gross_profit_amount
 
